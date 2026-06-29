@@ -1,0 +1,4 @@
+[submodule "hooksentry"]
+	path = hooksentry
+	url = https://github.com/rhaynerrs/hooksentry.git
+	branch = main

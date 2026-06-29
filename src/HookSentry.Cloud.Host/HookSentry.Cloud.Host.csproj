@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- OSS core (via git submodule at /hooksentry) -->
+  <ItemGroup>
+    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Api/HookSentry.Api.csproj" />
+    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Worker/HookSentry.Worker.csproj" />
+  </ItemGroup>
+
+  <!-- SaaS extensions -->
+  <ItemGroup>
+    <ProjectReference Include="../HookSentry.Billing/HookSentry.Billing.csproj" />
+    <ProjectReference Include="../HookSentry.Subscriptions/HookSentry.Subscriptions.csproj" />
+  </ItemGroup>
+
+</Project>

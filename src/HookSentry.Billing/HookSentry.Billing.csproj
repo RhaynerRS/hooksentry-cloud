@@ -1,9 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence\Migrations\*.sql" />
+  </ItemGroup>
+
+  <!-- OSS core (via git submodule at /hooksentry) -->
+  <ItemGroup>
+    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Domain/HookSentry.Domain.csproj" />
+    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Infrastructure/HookSentry.Infrastructure.csproj" />
+    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Api/HookSentry.Api.csproj" />
+  </ItemGroup>
 
 </Project>

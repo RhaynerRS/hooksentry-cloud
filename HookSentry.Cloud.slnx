@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/HookSentry.Cloud.Host/HookSentry.Cloud.Host.csproj" />
     <Project Path="src/HookSentry.Billing/HookSentry.Billing.csproj" />
+    <Project Path="src/HookSentry.Billing.Tests/HookSentry.Billing.Tests.csproj" />
     <Project Path="src/HookSentry.Subscriptions/HookSentry.Subscriptions.csproj" />
   </Folder>
 </Solution>

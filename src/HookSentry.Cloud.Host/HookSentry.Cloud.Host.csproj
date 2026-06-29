@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>a2fd05ae-8c1a-4d79-9165-3e8cccfd9781</UserSecretsId>
   </PropertyGroup>
 
   <!-- OSS core (via git submodule at /hooksentry) -->

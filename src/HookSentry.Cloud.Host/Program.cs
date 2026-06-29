@@ -3,6 +3,7 @@ using HookSentry.Api.Common.Endpoints;
 using HookSentry.Api.Common.Exceptions;
 using HookSentry.Api.Common.Extensions;
 using HookSentry.Billing.Extensions;
+using HookSentry.Billing.Persistence.Mappings;
 using HookSentry.Infrastructure.Observability;
 using HookSentry.Infrastructure.Persistence;
 using HookSentry.Infrastructure.RabbitMq;
@@ -19,7 +20,7 @@ builder.Services
     .AddExceptionHandler<GlobalExceptionHandler>()
     .AddProblemDetails()
     .AddEndpoints()
-    .AddPersistence(builder.Configuration)
+    .AddPersistence(builder.Configuration, typeof(PlanMap).Assembly)
     .AddRedis(builder.Configuration)
     .AddSecurity(builder.Configuration)
     .AddJwtAndApiKeyAuth(builder.Configuration)
@@ -34,6 +35,7 @@ builder.Services
 var app = builder.Build();
 
 app.Services.MigrateDatabase(app.Configuration);
+app.Services.MigrateBillingDatabase(app.Configuration);
 
 var mqConn = app.Services.GetRequiredService<RabbitMqConnection>();
 var mqSettings = app.Services.GetRequiredService<IOptions<RabbitMqSettings>>().Value;

@@ -28,6 +28,7 @@ public static class BillingExtensions
         services.AddScoped<ITenantStateCache, RedisTenantStateCache>();
         services.AddScoped<IQuotaService, RedisQuotaService>();
         services.AddScoped<ITenantCreatedPostProcessor, SetOwnerRoleProcessor>();
+        services.AddScoped<ITenantCreatedPostProcessor, CreateTenantCloudStateProcessor>();
 
         services.AddSingleton<ICloudNotificationService, LogOnlyNotificationService>();
         services.AddHostedService<UsageFlushJob>();

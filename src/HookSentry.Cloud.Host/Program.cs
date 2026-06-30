@@ -47,6 +47,7 @@ app.UseCors(CorsExtensions.SitePolicyName);
 app.UseAuthentication();
 app.UseTenantAccess();
 app.UseQuotaEnforcement();
+app.UseLastOwnerProtection();
 app.UseAuthorization();
 app.MapEndpoints();
 app.MapBillingEndpoints();

@@ -95,6 +95,18 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
+    volumes:
+      - ../docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+
+  tempo:
+    image: grafana/tempo:latest
+    command: -config.file=/etc/tempo/tempo-config.yaml
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ../docker/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
 
   grafana:
     image: grafana/grafana:latest
@@ -107,6 +119,7 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
+      - tempo
 
 volumes:
   grafana_data:

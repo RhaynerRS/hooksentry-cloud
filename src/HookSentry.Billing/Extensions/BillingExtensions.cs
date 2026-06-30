@@ -30,6 +30,9 @@ public static class BillingExtensions
         services.AddScoped<ITenantCreatedPostProcessor, SetOwnerRoleProcessor>();
         services.AddScoped<ITenantCreatedPostProcessor, CreateTenantCloudStateProcessor>();
 
+        services.Configure<EventRetentionOptions>(
+            configuration.GetSection("CloudProtection:EventRetention"));
+
         services.AddSingleton<ICloudNotificationService, LogOnlyNotificationService>();
         services.AddHostedService<UsageFlushJob>();
         services.AddHostedService<QuotaWarningJob>();

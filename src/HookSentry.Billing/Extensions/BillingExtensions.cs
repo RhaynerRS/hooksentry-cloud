@@ -1,6 +1,8 @@
 using HookSentry.Billing.Endpoints.GetPlans;
 using HookSentry.Billing.Endpoints.GetUsage;
 using HookSentry.Billing.Endpoints.TenantBlocking;
+using HookSentry.Billing.Jobs;
+using HookSentry.Billing.Notifications;
 using HookSentry.Billing.Persistence;
 using HookSentry.Billing.Persistence.Repositories;
 using HookSentry.Billing.Plans;
@@ -26,6 +28,12 @@ public static class BillingExtensions
         services.AddScoped<ITenantStateCache, RedisTenantStateCache>();
         services.AddScoped<IQuotaService, RedisQuotaService>();
         services.AddScoped<ITenantCreatedPostProcessor, SetOwnerRoleProcessor>();
+
+        services.AddSingleton<ICloudNotificationService, LogOnlyNotificationService>();
+        services.AddHostedService<UsageFlushJob>();
+        services.AddHostedService<QuotaWarningJob>();
+        services.AddHostedService<EventRetentionJob>();
+        services.AddHostedService<DataPurgeJob>();
 
         services.AddAuthorization(options =>
         {

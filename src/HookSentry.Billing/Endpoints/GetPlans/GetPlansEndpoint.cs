@@ -4,6 +4,7 @@ using HookSentry.Billing.Plans;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using NHibernate.Linq;
 
 namespace HookSentry.Billing.Endpoints.GetPlans;
 
@@ -16,11 +17,11 @@ public class GetPlansEndpoint : IEndpoint
             .WithTags("Plans")
             .WithSummary("Lista os planos disponíveis")
             .WithDescription("""
-                Retorna todos os planos ativos disponíveis para contratação.
+                Retorna todos os planos disponíveis.
                 Endpoint público — não requer autenticação.
 
                 **Códigos de retorno:**
-                - `200 OK`: lista de planos com limites e features
+                - `200 OK`: lista de planos com limites
                 """)
             .Produces<IReadOnlyList<PlanResponse>>();
     }
@@ -29,7 +30,7 @@ public class GetPlansEndpoint : IEndpoint
         IPlanRepository planRepository,
         CancellationToken ct)
     {
-        var plans = await planRepository.GetAllActiveAsync(ct);
+        var plans = await planRepository.Query().ToListAsync(ct);
         return Results.Ok(plans.Select(PlanResponse.From).ToList());
     }
 }

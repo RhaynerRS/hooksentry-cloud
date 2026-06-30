@@ -57,13 +57,18 @@ public static class BillingExtensions
     public static IApplicationBuilder UseLastOwnerProtection(this IApplicationBuilder app) =>
         app.UseMiddleware<LastOwnerProtectionMiddleware>();
 
+    public static IEndpointRouteBuilder MapCloudEndpoints(this IEndpointRouteBuilder app)
+    {
+        var cloud = app.MapGroup("/cloud").WithTags("Cloud");
+        new GetPlansEndpoint().MapEndpoints(cloud);
+        new GetUsageEndpoint().MapEndpoints(cloud);
+        return app;
+    }
+
     public static IEndpointRouteBuilder MapBillingEndpoints(this IEndpointRouteBuilder app)
     {
-        new GetPlansEndpoint().MapEndpoints(app);
-        new GetUsageEndpoint().MapEndpoints(app);
         new BlockTenantEndpoint().MapEndpoints(app);
         new UnblockTenantEndpoint().MapEndpoints(app);
-
         return app;
     }
 

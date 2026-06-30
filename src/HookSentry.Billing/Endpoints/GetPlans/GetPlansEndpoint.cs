@@ -12,9 +12,9 @@ public class GetPlansEndpoint : IEndpoint
 {
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
-        app.MapGet("/cloud/plans", Handle)
+        app.MapGet("/plans", Handle)
             .WithName("GetPlans")
-            .WithTags("Plans")
+            .AllowAnonymous()
             .WithSummary("Lista os planos disponíveis")
             .WithDescription("""
                 Retorna todos os planos disponíveis.

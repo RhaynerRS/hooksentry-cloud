@@ -50,6 +50,7 @@ app.UseQuotaEnforcement();
 app.UseLastOwnerProtection();
 app.UseAuthorization();
 app.MapEndpoints();
+app.MapCloudEndpoints();
 app.MapBillingEndpoints();
 
 await app.RunAsync();

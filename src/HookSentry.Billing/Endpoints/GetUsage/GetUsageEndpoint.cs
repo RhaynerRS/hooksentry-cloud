@@ -14,9 +14,8 @@ public class GetUsageEndpoint : IEndpoint
 {
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
-        app.MapGet("/cloud/usage", Handle)
+        app.MapGet("/usage", Handle)
             .WithName("GetUsage")
-            .WithTags("Usage")
             .WithSummary("Retorna o consumo de eventos do tenant no mês atual")
             .WithDescription("""
                 Retorna as métricas de consumo do tenant autenticado para o período atual (mês corrente).

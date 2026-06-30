@@ -46,6 +46,7 @@ app.UseSwaggerWithAuth();
 app.UseCors(CorsExtensions.SitePolicyName);
 app.UseAuthentication();
 app.UseTenantAccess();
+app.UseQuotaEnforcement();
 app.UseAuthorization();
 app.MapEndpoints();
 app.MapBillingEndpoints();

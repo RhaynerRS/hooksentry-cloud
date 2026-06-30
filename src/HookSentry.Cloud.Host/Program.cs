@@ -45,6 +45,7 @@ app.UseExceptionHandler();
 app.UseSwaggerWithAuth();
 app.UseCors(CorsExtensions.SitePolicyName);
 app.UseAuthentication();
+app.UseTenantAccess();
 app.UseAuthorization();
 app.MapEndpoints();
 app.MapBillingEndpoints();

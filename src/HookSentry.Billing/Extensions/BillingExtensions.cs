@@ -1,7 +1,9 @@
 using HookSentry.Billing.Endpoints.GetPlans;
+using HookSentry.Billing.Endpoints.TenantBlocking;
 using HookSentry.Billing.Persistence;
 using HookSentry.Billing.Persistence.Repositories;
 using HookSentry.Billing.Plans;
+using HookSentry.Billing.TenantAccess;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
@@ -15,13 +17,20 @@ public static class BillingExtensions
     {
         services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddHostedService<PlanSeeder>();
+        services.AddScoped<ITenantCloudStateRepository, TenantCloudStateRepository>();
+        services.AddScoped<ITenantStateCache, RedisTenantStateCache>();
 
         return services;
     }
 
+    public static IApplicationBuilder UseTenantAccess(this IApplicationBuilder app) =>
+        app.UseMiddleware<TenantAccessMiddleware>();
+
     public static IEndpointRouteBuilder MapBillingEndpoints(this IEndpointRouteBuilder app)
     {
         new GetPlansEndpoint().MapEndpoints(app);
+        new BlockTenantEndpoint().MapEndpoints(app);
+        new UnblockTenantEndpoint().MapEndpoints(app);
 
         return app;
     }

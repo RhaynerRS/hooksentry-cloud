@@ -92,7 +92,6 @@ jobs:
       CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-      API_IMAGE_TAG: ${{ env.TAG }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,6 +118,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          export API_IMAGE_TAG="$TAG"
           docker compose -p hooksentry-cloud -f docker-compose.cloud.yml pull api
           docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps api
           docker image prune -f

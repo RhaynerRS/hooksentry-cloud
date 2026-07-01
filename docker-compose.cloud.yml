@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: src/HookSentry.Cloud.Host/Dockerfile
-    image: hooksentry-cloud-api:latest
+    image: ghcr.io/rhaynerrs/hooksentry-cloud-api:${API_IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
       - "5143:5143"
@@ -36,7 +36,7 @@ services:
     build:
       context: ./hooksentry
       dockerfile: src/HookSentry.Worker/dockerfile
-    image: hooksentry-cloud-worker:latest
+    image: ghcr.io/rhaynerrs/hooksentry-cloud-worker:${WORKER_IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

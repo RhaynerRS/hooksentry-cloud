@@ -24,5 +24,3 @@ appsettings.*.json
 !appsettings.Development.json
 .env
 .env.*
-
-hooksentry

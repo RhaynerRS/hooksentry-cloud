@@ -17,7 +17,7 @@ public class RedisTenantStateCache(
 
         var cached = await db.StringGetAsync(key);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<TenantState>(cached!);
+            return JsonSerializer.Deserialize<TenantState>((string)cached!);
 
         // Cache miss — load from DB; absent record = active (not blocked)
         var state = await repository.FindByTenantAsync(tenantId, ct);

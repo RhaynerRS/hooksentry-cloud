@@ -12,6 +12,7 @@ using HookSentry.Billing.TenantAccess;
 using HookSentry.Domain.Tenants;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -71,7 +72,8 @@ public static class BillingExtensions
 
     public static IEndpointRouteBuilder MapCloudEndpoints(this IEndpointRouteBuilder app)
     {
-        var cloud = app.MapGroup("/cloud").WithTags("Cloud");
+        var cloud = app.MapGroup("/cloud");
+        cloud.WithTags("Cloud");
         new GetPlansEndpoint().MapEndpoints(cloud);
         new GetUsageEndpoint().MapEndpoints(cloud);
         return app;

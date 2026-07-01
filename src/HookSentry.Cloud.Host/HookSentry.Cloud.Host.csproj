@@ -9,8 +9,8 @@
 
   <!-- OSS core (via git submodule at /hooksentry) -->
   <ItemGroup>
-    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Api/HookSentry.Api.csproj" />
-    <ProjectReference Include="../../hooksentry/hooksentry-api/src/HookSentry.Worker/HookSentry.Worker.csproj" />
+    <ProjectReference Include="../../hooksentry/src/HookSentry.Api/HookSentry.Api.csproj" />
+    <ProjectReference Include="../../hooksentry/src/HookSentry.Worker/HookSentry.Worker.csproj" />
   </ItemGroup>
 
   <!-- SaaS extensions -->
@@ -18,5 +18,15 @@
     <ProjectReference Include="../HookSentry.Billing/HookSentry.Billing.csproj" />
     <ProjectReference Include="../HookSentry.Subscriptions/HookSentry.Subscriptions.csproj" />
   </ItemGroup>
+
+  <!-- HookSentry.Api/HookSentry.Worker are standalone Web SDK apps; referencing them as
+       libraries pulls their appsettings*.json into our publish output, colliding with our
+       own. Cloud.Host's appsettings.json is the single source of truth for the merged process. -->
+  <Target Name="ExcludeReferencedProjectAppSettings" BeforeTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+        Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('appsettings')) And !$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('HookSentry.Cloud.Host'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>

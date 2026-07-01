@@ -17,6 +17,9 @@ services:
       - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY}
       - Stripe__SecretKey=${STRIPE_SECRET_KEY}
       - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET}
+      - Otel__Endpoint=http://tempo:4317
+      - Otel__LogsEndpoint=http://tempo:4318
+      - Otel__ServiceName=hooksentry-cloud-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,7 +32,7 @@ services:
 
   worker:
     build:
-      context: ./hooksentry/hooksentry-api
+      context: ./hooksentry
       dockerfile: src/HookSentry.Worker/dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

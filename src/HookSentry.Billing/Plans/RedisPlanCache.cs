@@ -16,7 +16,7 @@ public class RedisPlanCache(
 
         var cached = await db.StringGetAsync(CacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<PlanLimits>(cached!)!;
+            return JsonSerializer.Deserialize<PlanLimits>((string)cached!)!;
 
         var plan = await planRepository.GetByNameAsync("free", ct)
             ?? throw new InvalidOperationException("Free plan not found in database.");

@@ -8,16 +8,16 @@ COPY src/HookSentry.Billing/HookSentry.Billing.csproj src/HookSentry.Billing/
 COPY src/HookSentry.Subscriptions/HookSentry.Subscriptions.csproj src/HookSentry.Subscriptions/
 
 # Copy OSS submodule project files
-COPY hooksentry/hooksentry-api/src/HookSentry.Api/HookSentry.Api.csproj hooksentry/hooksentry-api/src/HookSentry.Api/
-COPY hooksentry/hooksentry-api/src/HookSentry.Domain/HookSentry.Domain.csproj hooksentry/hooksentry-api/src/HookSentry.Domain/
-COPY hooksentry/hooksentry-api/src/HookSentry.Infrastructure/HookSentry.Infrastructure.csproj hooksentry/hooksentry-api/src/HookSentry.Infrastructure/
-COPY hooksentry/hooksentry-api/src/HookSentry.Worker/HookSentry.Worker.csproj hooksentry/hooksentry-api/src/HookSentry.Worker/
+COPY hooksentry/src/HookSentry.Api/HookSentry.Api.csproj hooksentry/src/HookSentry.Api/
+COPY hooksentry/src/HookSentry.Domain/HookSentry.Domain.csproj hooksentry/src/HookSentry.Domain/
+COPY hooksentry/src/HookSentry.Infrastructure/HookSentry.Infrastructure.csproj hooksentry/src/HookSentry.Infrastructure/
+COPY hooksentry/src/HookSentry.Worker/HookSentry.Worker.csproj hooksentry/src/HookSentry.Worker/
 
 RUN dotnet restore src/HookSentry.Cloud.Host/HookSentry.Cloud.Host.csproj
 
 # Copy all source
 COPY src/ src/
-COPY hooksentry/hooksentry-api/src/ hooksentry/hooksentry-api/src/
+COPY hooksentry/src/ hooksentry/src/
 
 RUN dotnet publish src/HookSentry.Cloud.Host/HookSentry.Cloud.Host.csproj \
     -c Release -o /out --no-restore

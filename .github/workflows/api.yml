@@ -2,24 +2,21 @@ name: API — test, build & deploy
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'src/HookSentry.Cloud.Host/**'
-      - 'src/HookSentry.Billing/**'
-      - 'src/HookSentry.Subscriptions/**'
-      - 'src/HookSentry.Billing.Tests/**'
-      - 'hooksentry'                      # ponteiro do submódulo mudou
-      - 'HookSentry.Cloud.slnx'
-      - 'docker-compose.cloud.yml'
-      - '.github/workflows/api.yml'
-  workflow_dispatch:                       # permite disparar manual pela aba Actions
+    tags: ['v*']                           # criar tag v* dispara build+deploy
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag pra buildar e deployar (deve existir, ex: v1.2.3)'
+        required: true
+        type: string
 
 concurrency:
   group: api-deploy
-  cancel-in-progress: false                # não cancela um deploy no meio
+  cancel-in-progress: false
 
 env:
   IMAGE: ghcr.io/rhaynerrs/hooksentry-cloud-api
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   test:
@@ -28,6 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag || github.ref_name }}
           submodules: recursive            # precisa do core (hooksentry/) pra compilar
           token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
 
@@ -47,10 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write                      # necessário pra dar push no GHCR
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag || github.ref_name }}
           submodules: recursive
           token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
 
@@ -70,8 +69,8 @@ jobs:
           file: src/HookSentry.Cloud.Host/Dockerfile
           push: true
           tags: |
+            ${{ env.IMAGE }}:${{ env.TAG }}
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -80,22 +79,13 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4          # só pra ter o compose pra copiar
-
-      - name: Copiar compose pra VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          source: docker-compose.cloud.yml
-          target: ${{ secrets.DEPLOY_PATH }}
-
-      - name: Pull da imagem nova + recriar container
+      - name: Checkout da tag na VPS + pull + recriar container
         uses: appleboy/ssh-action@v1.2.0
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          REPO_SLUG: ${{ github.repository }}
+          GIT_TOKEN: ${{ secrets.GIT_DEPLOY_TOKEN || secrets.SUBMODULE_TOKEN }}
+          TAG: ${{ env.TAG }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -114,12 +104,28 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          envs: DEPLOY_PATH,GHCR_USER,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_PASSWORD,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_KEY,API_KEY,CREDENTIAL_ENCRYPTION_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
+          envs: DEPLOY_PATH,REPO_SLUG,GIT_TOKEN,TAG,GHCR_USER,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_PASSWORD,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_KEY,API_KEY,CREDENTIAL_ENCRYPTION_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
           script: |
             set -euo pipefail
-            cd "$DEPLOY_PATH"
 
-            # Recria o .env a partir dos secrets injetados via SSH
+            # Auth git sem gravar token em disco (askpass efêmero)
+            ASKPASS="$(mktemp)"
+            trap 'rm -f "$ASKPASS"' EXIT
+            printf '#!/bin/sh\necho "%s"\n' "$GIT_TOKEN" > "$ASKPASS"
+            chmod +x "$ASKPASS"
+            export GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0
+
+            # Clona o repo na raiz do DEPLOY_PATH se ainda não existir
+            mkdir -p "$(dirname "$DEPLOY_PATH")"
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              git clone "https://x-access-token@github.com/${REPO_SLUG}.git" "$DEPLOY_PATH"
+            fi
+            cd "$DEPLOY_PATH"
+            git remote set-url origin "https://x-access-token@github.com/${REPO_SLUG}.git"
+            git fetch --tags --force origin
+            git checkout --force "refs/tags/${TAG}"
+
+            # .env com os secrets (troca de env var acontece aqui)
             umask 077
             {
               echo "POSTGRES_USER=$POSTGRES_USER"
@@ -136,6 +142,7 @@ jobs:
             } > .env
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export API_IMAGE_TAG="$TAG"
             docker compose -p hooksentry-cloud -f docker-compose.cloud.yml pull api
             docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps api
             docker image prune -f

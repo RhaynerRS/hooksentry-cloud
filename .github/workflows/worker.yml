@@ -75,75 +75,51 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy na VPS (SSH)
+    name: Deploy na VPS (self-hosted)
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    env:
+      GHCR_USER: ${{ github.actor }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      API_KEY: ${{ secrets.API_KEY }}
+      CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      WORKER_IMAGE_TAG: ${{ env.TAG }}
     steps:
-      - name: Checkout da tag na VPS + pull + recriar container
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          REPO_SLUG: ${{ github.repository }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          TAG: ${{ env.TAG }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
-          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-          JWT_KEY: ${{ secrets.JWT_KEY }}
-          API_KEY: ${{ secrets.API_KEY }}
-          CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      - uses: actions/checkout@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          envs: DEPLOY_PATH,REPO_SLUG,DEPLOY_KEY,TAG,GHCR_USER,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_PASSWORD,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_KEY,API_KEY,CREDENTIAL_ENCRYPTION_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
-          script: |
-            set -euo pipefail
+          ref: ${{ inputs.tag || github.ref_name }}
 
-            # Auth git via deploy key (SSH), chave privada em arquivo temporário
-            KEYFILE="$(mktemp)"
-            trap 'rm -f "$KEYFILE"' EXIT
-            printf '%s\n' "$DEPLOY_KEY" > "$KEYFILE"
-            chmod 600 "$KEYFILE"
-            export GIT_SSH_COMMAND="ssh -i $KEYFILE -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+      - name: Gerar .env
+        run: |
+          umask 077
+          {
+            echo "POSTGRES_USER=$POSTGRES_USER"
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+            echo "POSTGRES_DB=$POSTGRES_DB"
+            echo "REDIS_PASSWORD=$REDIS_PASSWORD"
+            echo "RABBITMQ_USER=$RABBITMQ_USER"
+            echo "RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
+            echo "JWT_KEY=$JWT_KEY"
+            echo "API_KEY=$API_KEY"
+            echo "CREDENTIAL_ENCRYPTION_KEY=$CREDENTIAL_ENCRYPTION_KEY"
+            echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
+            echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
+          } > .env
 
-            # Clona o repo na raiz do DEPLOY_PATH se ainda não existir
-            mkdir -p "$(dirname "$DEPLOY_PATH")"
-            if [ ! -d "$DEPLOY_PATH/.git" ]; then
-              git clone "git@github.com:${REPO_SLUG}.git" "$DEPLOY_PATH"
-            fi
-            cd "$DEPLOY_PATH"
-            git remote set-url origin "git@github.com:${REPO_SLUG}.git"
-            git fetch --tags --force origin
-            git checkout --force "refs/tags/${TAG}"
-
-            # .env com os secrets (troca de env var acontece aqui)
-            umask 077
-            {
-              echo "POSTGRES_USER=$POSTGRES_USER"
-              echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
-              echo "POSTGRES_DB=$POSTGRES_DB"
-              echo "REDIS_PASSWORD=$REDIS_PASSWORD"
-              echo "RABBITMQ_USER=$RABBITMQ_USER"
-              echo "RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
-              echo "JWT_KEY=$JWT_KEY"
-              echo "API_KEY=$API_KEY"
-              echo "CREDENTIAL_ENCRYPTION_KEY=$CREDENTIAL_ENCRYPTION_KEY"
-              echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
-              echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
-            } > .env
-
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            export WORKER_IMAGE_TAG="$TAG"
-            docker compose -p hooksentry-cloud -f docker-compose.cloud.yml pull worker
-            docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps worker
-            docker image prune -f
-            docker logout ghcr.io
+      - name: Pull & recriar container
+        run: |
+          set -euo pipefail
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          docker compose -p hooksentry-cloud -f docker-compose.cloud.yml pull worker
+          docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps worker
+          docker image prune -f
+          docker logout ghcr.io

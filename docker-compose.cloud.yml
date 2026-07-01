@@ -9,13 +9,14 @@ services:
       - "5143:5143"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}
-      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false
+      - ConnectionStrings__DefaultConnection=${CONNECTION_DEFAULT:-Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}}
+      - ConnectionStrings__Redis=${CONNECTION_REDIS:-redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false}
       - Jwt__Key=${JWT_KEY:-Q29ubmVjdGlvblN0cmluZ3NfX0RlZmF1bHRDb25uZWN0aW9uPUhvc3Q9cG9zdGdyZXM7UG9ydD01NDMyO0RhdGFiYXNlPVlvdXJfZGF0YWJhc2U7VXNlcm5hbWU9WW91cl91c2VybmFtZTtQYXNzd29yZD1Zb3VyX3Bhc3N3b3JkMTIz}
       - ApiKey__Value=${API_KEY:-change-this-api-key}
-      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Host=${RABBITMQ_HOST:-rabbitmq}
       - RabbitMq__Username=${RABBITMQ_USER:-Your_username}
       - RabbitMq__Password=${RABBITMQ_PASSWORD:-Your_password123}
+      - RabbitMq__VirtualHost=${RABBITMQ_VHOST:-/}
       - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY:-YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=}
       - Stripe__SecretKey=${STRIPE_SECRET_KEY:-sk_test_placeholder}
       - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
@@ -40,10 +41,11 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}
-      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false
-      - RabbitMq__Host=rabbitmq
+      - ConnectionStrings__DefaultConnection=${CONNECTION_DEFAULT:-Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}}
+      - ConnectionStrings__Redis=${CONNECTION_REDIS:-redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false}
+      - RabbitMq__Host=${RABBITMQ_HOST:-rabbitmq}
       - RabbitMq__Username=${RABBITMQ_USER:-Your_username}
+      - RabbitMq__VirtualHost=${RABBITMQ_VHOST:-/}
       - RabbitMq__Password=${RABBITMQ_PASSWORD:-Your_password123}
       - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY:-YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=}
     depends_on:

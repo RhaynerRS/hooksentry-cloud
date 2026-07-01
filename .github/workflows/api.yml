@@ -79,9 +79,10 @@ jobs:
     needs: build-and-push
     runs-on: self-hosted
     env:
-      RabbitMq__Host: ${{ vars.RABBITMQ__HOST }}
-      RabbitMq__VirtualHost: ${{ vars.RABBITMQ__VIRTUALHOST }}
-      ConnectionStrings__Redis : ${{ vars.CONNECTIONSTRINGS__REDIS }}
+      RABBITMQ_HOST: ${{ vars.RABBITMQ__HOST }}
+      RABBITMQ_VHOST: ${{ vars.RABBITMQ__VIRTUALHOST }}
+      CONNECTION_REDIS : ${{ vars.CONNECTIONSTRINGS__REDIS }}
+      CONNECTION_DEFAULT : ${{ vars.CONNECTIONSTRINGS__DEFAULTCONNECTION }}
       GHCR_USER: ${{ github.actor }}
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}

@@ -79,6 +79,9 @@ jobs:
     needs: build-and-push
     runs-on: self-hosted
     env:
+      RabbitMq__Host: ${{ vars.RABBITMQ__HOST }}
+      RabbitMq__VirtualHost: ${{ vars.RABBITMQ__VIRTUALHOST }}
+      ConnectionStrings__Redis : ${{ vars.CONNECTIONSTRINGS__REDIS }}
       GHCR_USER: ${{ github.actor }}
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -90,8 +93,6 @@ jobs:
       JWT_KEY: ${{ secrets.JWT_KEY }}
       API_KEY: ${{ secrets.API_KEY }}
       CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
-      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -107,11 +108,11 @@ jobs:
             echo "REDIS_PASSWORD=$REDIS_PASSWORD"
             echo "RABBITMQ_USER=$RABBITMQ_USER"
             echo "RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
+            echo "RABBITMQ_HOST=$RABBITMQ_HOST"
+            echo "RABBITMQ_VHOST=$RABBITMQ_VHOST"
             echo "JWT_KEY=$JWT_KEY"
             echo "API_KEY=$API_KEY"
             echo "CREDENTIAL_ENCRYPTION_KEY=$CREDENTIAL_ENCRYPTION_KEY"
-            echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
-            echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
           } > .env
 
       - name: Pull & recriar container

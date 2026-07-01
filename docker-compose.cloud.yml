@@ -7,16 +7,16 @@ services:
       - "5143:5143"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD},abortConnect=false
-      - Jwt__Key=${JWT_KEY}
-      - ApiKey__Value=${API_KEY}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Your_database;Username=Your_username;Password=Your_password123
+      - ConnectionStrings__Redis=redis:6379,user=default,password=Your_redis_password,abortConnect=false
+      - Jwt__Key=Q29ubmVjdGlvblN0cmluZ3NfX0RlZmF1bHRDb25uZWN0aW9uPUhvc3Q9cG9zdGdyZXM7UG9ydD01NDMyO0RhdGFiYXNlPVlvdXJfZGF0YWJhc2U7VXNlcm5hbWU9WW91cl91c2VybmFtZTtQYXNzd29yZD1Zb3VyX3Bhc3N3b3JkMTIz
+      - ApiKey__Value=change-this-api-key
       - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=${RABBITMQ_USER}
-      - RabbitMq__Password=${RABBITMQ_PASSWORD}
-      - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY}
-      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
-      - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET}
+      - RabbitMq__Username=Your_username
+      - RabbitMq__Password=Your_password123
+      - CredentialEncryption__Key=YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=
+      - Stripe__SecretKey=sk_test_placeholder
+      - Stripe__WebhookSecret=whsec_placeholder
       - Otel__Endpoint=http://tempo:4317
       - Otel__LogsEndpoint=http://tempo:4318
       - Otel__ServiceName=hooksentry-cloud-api
@@ -36,12 +36,12 @@ services:
       dockerfile: src/HookSentry.Worker/dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD},abortConnect=false
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Your_database;Username=Your_username;Password=Your_password123
+      - ConnectionStrings__Redis=redis:6379,user=default,password=Your_redis_password,abortConnect=false
       - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=${RABBITMQ_USER}
-      - RabbitMq__Password=${RABBITMQ_PASSWORD}
-      - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY}
+      - RabbitMq__Username=Your_username
+      - RabbitMq__Password=Your_password123
+      - CredentialEncryption__Key=YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,8 +54,8 @@ services:
     image: rabbitmq:3-management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER}"
-      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD}"
+      RABBITMQ_DEFAULT_USER: "Your_username"
+      RABBITMQ_DEFAULT_PASS: "Your_password123"
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -70,13 +70,13 @@ services:
     image: postgres:latest
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      POSTGRES_USER: "${DB_USER}"
-      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_PASSWORD: "Your_password123"
+      POSTGRES_USER: "Your_username"
+      POSTGRES_DB: "Your_database"
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U Your_username -d Your_database"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -84,11 +84,11 @@ services:
   redis:
     image: redis:alpine
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass Your_redis_password
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "Your_redis_password", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

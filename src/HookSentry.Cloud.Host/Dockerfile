@@ -24,5 +24,9 @@ RUN dotnet publish src/HookSentry.Cloud.Host/HookSentry.Cloud.Host.csproj \
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
+EXPOSE 5143
+
+ENV ASPNETCORE_HTTP_PORTS=5143
+
 COPY --from=build /out ./
 ENTRYPOINT ["dotnet", "HookSentry.Cloud.Host.dll"]

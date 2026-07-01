@@ -10,4 +10,10 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../../hooksentry/src/HookSentry.Domain/HookSentry.Domain.csproj" />
+    <ProjectReference Include="../../hooksentry/src/HookSentry.Infrastructure/HookSentry.Infrastructure.csproj" />
+    <ProjectReference Include="../../hooksentry/src/HookSentry.Api/HookSentry.Api.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -43,11 +43,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${CONNECTION_DEFAULT:-Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}}
       - ConnectionStrings__Redis=${CONNECTION_REDIS:-redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false}
+      - ApiKey__Value=${API_KEY:-change-this-api-key}
       - RabbitMq__Host=${RABBITMQ_HOST:-rabbitmq}
       - RabbitMq__Username=${RABBITMQ_USER:-Your_username}
-      - RabbitMq__VirtualHost=${RABBITMQ_VHOST:-/}
       - RabbitMq__Password=${RABBITMQ_PASSWORD:-Your_password123}
+      - RabbitMq__VirtualHost=${RABBITMQ_VHOST:-/}
       - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY:-YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=}
+      - Otel__Endpoint=http://tempo:4317
+      - Otel__LogsEndpoint=http://tempo:4318
+      - Otel__ServiceName=hooksentry-cloud-api
     depends_on:
       postgres:
         condition: service_healthy

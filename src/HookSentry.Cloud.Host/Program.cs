@@ -52,6 +52,7 @@ app.UseLastOwnerProtection();
 app.UseAuthorization();
 app.MapEndpoints();
 app.MapCloudEndpoints();
+app.MapAbuseEndpoints();
 app.MapBillingEndpoints();
 
 await app.RunAsync();

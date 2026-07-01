@@ -19,6 +19,12 @@
     <ProjectReference Include="../HookSentry.Subscriptions/HookSentry.Subscriptions.csproj" />
   </ItemGroup>
 
+  <!-- Anti-abuse resources (disposable email blocklist) copied to the content root
+       so FileBasedDisposableEmailChecker can read Resources/disposable-domains.txt. -->
+  <ItemGroup>
+    <Content Include="Resources\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- HookSentry.Api/HookSentry.Worker are standalone Web SDK apps; referencing them as
        libraries pulls their appsettings*.json into our publish output, colliding with our
        own. Cloud.Host's appsettings.json is the single source of truth for the merged process. -->

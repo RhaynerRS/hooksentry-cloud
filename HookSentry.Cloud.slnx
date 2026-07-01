@@ -4,5 +4,6 @@
     <Project Path="src/HookSentry.Billing/HookSentry.Billing.csproj" />
     <Project Path="src/HookSentry.Billing.Tests/HookSentry.Billing.Tests.csproj" />
     <Project Path="src/HookSentry.Subscriptions/HookSentry.Subscriptions.csproj" />
+    <Project Path="src/HookSentry.Subscriptions.Tests/HookSentry.Subscriptions.Tests.csproj" />
   </Folder>
 </Solution>

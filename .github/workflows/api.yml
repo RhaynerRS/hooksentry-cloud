@@ -1,0 +1,88 @@
+name: API — test, build & deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/HookSentry.Cloud.Host/**'
+      - 'src/HookSentry.Billing/**'
+      - 'src/HookSentry.Subscriptions/**'
+      - 'src/HookSentry.Billing.Tests/**'
+      - 'hooksentry'                      # ponteiro do submódulo mudou
+      - 'HookSentry.Cloud.slnx'
+      - 'docker-compose.cloud.yml'
+      - '.github/workflows/api.yml'
+  workflow_dispatch:                       # permite disparar manual pela aba Actions
+
+concurrency:
+  group: api-deploy
+  cancel-in-progress: false                # não cancela um deploy no meio
+
+jobs:
+  test:
+    name: Testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive            # precisa do core (hooksentry/) pra compilar
+          token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/HookSentry.Billing.Tests/HookSentry.Billing.Tests.csproj
+
+      - name: Test
+        run: dotnet test src/HookSentry.Billing.Tests/HookSentry.Billing.Tests.csproj -c Release --no-restore
+
+  deploy:
+    name: Build & recriar container (VPS)
+    needs: test
+    runs-on: [self-hosted]                 # runner instalado na VPS
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
+
+      - name: Gerar .env a partir dos GitHub Secrets
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
+          CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        run: |
+          umask 077
+          {
+            echo "POSTGRES_USER=$POSTGRES_USER"
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+            echo "POSTGRES_DB=$POSTGRES_DB"
+            echo "REDIS_PASSWORD=$REDIS_PASSWORD"
+            echo "RABBITMQ_USER=$RABBITMQ_USER"
+            echo "RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
+            echo "JWT_KEY=$JWT_KEY"
+            echo "API_KEY=$API_KEY"
+            echo "CREDENTIAL_ENCRYPTION_KEY=$CREDENTIAL_ENCRYPTION_KEY"
+            echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
+            echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
+          } > .env
+
+      - name: Build da imagem da API
+        run: docker compose -p hooksentry-cloud -f docker-compose.cloud.yml build api
+
+      - name: Recriar container da API com a imagem nova
+        run: docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps api
+
+      - name: Limpar imagens antigas
+        if: always()
+        run: docker image prune -f

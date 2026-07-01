@@ -1,0 +1,75 @@
+name: Worker — test, build & deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hooksentry'                       # ponteiro do submódulo core (onde vive o Worker)
+      - 'docker-compose.cloud.yml'
+      - '.github/workflows/worker.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Testes (core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore hooksentry/src/HookSentry.Tests/HookSentry.Tests.csproj
+
+      - name: Test
+        run: dotnet test hooksentry/src/HookSentry.Tests/HookSentry.Tests.csproj -c Release --no-restore
+
+  deploy:
+    name: Build & recriar container (VPS)
+    needs: test
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
+
+      - name: Gerar .env a partir dos GitHub Secrets
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
+        run: |
+          umask 077
+          {
+            echo "POSTGRES_USER=$POSTGRES_USER"
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+            echo "POSTGRES_DB=$POSTGRES_DB"
+            echo "REDIS_PASSWORD=$REDIS_PASSWORD"
+            echo "RABBITMQ_USER=$RABBITMQ_USER"
+            echo "RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
+            echo "CREDENTIAL_ENCRYPTION_KEY=$CREDENTIAL_ENCRYPTION_KEY"
+          } > .env
+
+      - name: Build da imagem do Worker
+        run: docker compose -p hooksentry-cloud -f docker-compose.cloud.yml build worker
+
+      - name: Recriar container do Worker com a imagem nova
+        run: docker compose -p hooksentry-cloud -f docker-compose.cloud.yml up -d --no-deps worker
+
+      - name: Limpar imagens antigas
+        if: always()
+        run: docker image prune -f

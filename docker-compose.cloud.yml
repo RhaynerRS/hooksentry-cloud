@@ -3,20 +3,22 @@ services:
     build:
       context: .
       dockerfile: src/HookSentry.Cloud.Host/Dockerfile
+    image: hooksentry-cloud-api:latest
+    restart: unless-stopped
     ports:
       - "5143:5143"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Your_database;Username=Your_username;Password=Your_password123
-      - ConnectionStrings__Redis=redis:6379,user=default,password=Your_redis_password,abortConnect=false
-      - Jwt__Key=Q29ubmVjdGlvblN0cmluZ3NfX0RlZmF1bHRDb25uZWN0aW9uPUhvc3Q9cG9zdGdyZXM7UG9ydD01NDMyO0RhdGFiYXNlPVlvdXJfZGF0YWJhc2U7VXNlcm5hbWU9WW91cl91c2VybmFtZTtQYXNzd29yZD1Zb3VyX3Bhc3N3b3JkMTIz
-      - ApiKey__Value=change-this-api-key
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}
+      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false
+      - Jwt__Key=${JWT_KEY:-Q29ubmVjdGlvblN0cmluZ3NfX0RlZmF1bHRDb25uZWN0aW9uPUhvc3Q9cG9zdGdyZXM7UG9ydD01NDMyO0RhdGFiYXNlPVlvdXJfZGF0YWJhc2U7VXNlcm5hbWU9WW91cl91c2VybmFtZTtQYXNzd29yZD1Zb3VyX3Bhc3N3b3JkMTIz}
+      - ApiKey__Value=${API_KEY:-change-this-api-key}
       - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=Your_username
-      - RabbitMq__Password=Your_password123
-      - CredentialEncryption__Key=YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=
-      - Stripe__SecretKey=sk_test_placeholder
-      - Stripe__WebhookSecret=whsec_placeholder
+      - RabbitMq__Username=${RABBITMQ_USER:-Your_username}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD:-Your_password123}
+      - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY:-YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=}
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
       - Otel__Endpoint=http://tempo:4317
       - Otel__LogsEndpoint=http://tempo:4318
       - Otel__ServiceName=hooksentry-cloud-api
@@ -34,14 +36,16 @@ services:
     build:
       context: ./hooksentry
       dockerfile: src/HookSentry.Worker/dockerfile
+    image: hooksentry-cloud-worker:latest
+    restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Your_database;Username=Your_username;Password=Your_password123
-      - ConnectionStrings__Redis=redis:6379,user=default,password=Your_redis_password,abortConnect=false
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-Your_database};Username=${POSTGRES_USER:-Your_username};Password=${POSTGRES_PASSWORD:-Your_password123}
+      - ConnectionStrings__Redis=redis:6379,user=default,password=${REDIS_PASSWORD:-Your_redis_password},abortConnect=false
       - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=Your_username
-      - RabbitMq__Password=Your_password123
-      - CredentialEncryption__Key=YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=
+      - RabbitMq__Username=${RABBITMQ_USER:-Your_username}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD:-Your_password123}
+      - CredentialEncryption__Key=${CREDENTIAL_ENCRYPTION_KEY:-YTNmOGMyZDFlNGI3MDkxZjZhNWQzZTJjOGYxYjRhNzA=}
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,8 +58,8 @@ services:
     image: rabbitmq:3-management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: "Your_username"
-      RABBITMQ_DEFAULT_PASS: "Your_password123"
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-Your_username}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-Your_password123}"
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -70,13 +74,13 @@ services:
     image: postgres:latest
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: "Your_password123"
-      POSTGRES_USER: "Your_username"
-      POSTGRES_DB: "Your_database"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Your_password123}"
+      POSTGRES_USER: "${POSTGRES_USER:-Your_username}"
+      POSTGRES_DB: "${POSTGRES_DB:-Your_database}"
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U Your_username -d Your_database"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-Your_username} -d ${POSTGRES_DB:-Your_database}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -84,11 +88,11 @@ services:
   redis:
     image: redis:alpine
     restart: unless-stopped
-    command: redis-server --requirepass Your_redis_password
+    command: redis-server --requirepass ${REDIS_PASSWORD:-Your_redis_password}
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "Your_redis_password", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-Your_redis_password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

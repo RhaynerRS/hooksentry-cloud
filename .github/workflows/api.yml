@@ -84,7 +84,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           REPO_SLUG: ${{ github.repository }}
-          GIT_TOKEN: ${{ secrets.GIT_DEPLOY_TOKEN || secrets.SUBMODULE_TOKEN }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
           TAG: ${{ env.TAG }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,24 +104,24 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          envs: DEPLOY_PATH,REPO_SLUG,GIT_TOKEN,TAG,GHCR_USER,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_PASSWORD,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_KEY,API_KEY,CREDENTIAL_ENCRYPTION_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
+          envs: DEPLOY_PATH,REPO_SLUG,DEPLOY_KEY,TAG,GHCR_USER,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,REDIS_PASSWORD,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_KEY,API_KEY,CREDENTIAL_ENCRYPTION_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
           script: |
             set -euo pipefail
 
-            # Auth git sem gravar token em disco (askpass efêmero)
-            ASKPASS="$(mktemp)"
-            trap 'rm -f "$ASKPASS"' EXIT
-            printf '#!/bin/sh\necho "%s"\n' "$GIT_TOKEN" > "$ASKPASS"
-            chmod +x "$ASKPASS"
-            export GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0
+            # Auth git via deploy key (SSH), chave privada em arquivo temporário
+            KEYFILE="$(mktemp)"
+            trap 'rm -f "$KEYFILE"' EXIT
+            printf '%s\n' "$DEPLOY_KEY" > "$KEYFILE"
+            chmod 600 "$KEYFILE"
+            export GIT_SSH_COMMAND="ssh -i $KEYFILE -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
 
             # Clona o repo na raiz do DEPLOY_PATH se ainda não existir
             mkdir -p "$(dirname "$DEPLOY_PATH")"
             if [ ! -d "$DEPLOY_PATH/.git" ]; then
-              git clone "https://x-access-token@github.com/${REPO_SLUG}.git" "$DEPLOY_PATH"
+              git clone "git@github.com:${REPO_SLUG}.git" "$DEPLOY_PATH"
             fi
             cd "$DEPLOY_PATH"
-            git remote set-url origin "https://x-access-token@github.com/${REPO_SLUG}.git"
+            git remote set-url origin "git@github.com:${REPO_SLUG}.git"
             git fetch --tags --force origin
             git checkout --force "refs/tags/${TAG}"
 

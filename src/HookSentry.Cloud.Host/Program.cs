@@ -30,8 +30,8 @@ builder.Services
     .AddObservability(builder.Configuration)
     // SaaS extensions
     .AddBilling(builder.Configuration)
-    .AddSubscriptions(builder.Configuration)
-    .AddAbuseProtection(builder.Configuration);
+    .AddSubscriptions(builder.Configuration);
+    SubscriptionsExtensions.AddAbuseProtection(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="hooksentry/refs/icon.svg" width="80" alt="HookSentry" />
+  <img src="./refs/icon.svg" width="80" alt="HookSentry" />
   <h1>HookSentry Cloud</h1>
   <p><strong>Managed SaaS layer for the HookSentry webhook delivery platform</strong></p>
   <p>
